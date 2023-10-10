@@ -44,6 +44,7 @@ public class Post {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL)
     private List<Comment> comments;
 
+    @JsonBackReference
     @ManyToMany(mappedBy = "followedPosts")
     private List<User> usersWhoFollows;
 }
