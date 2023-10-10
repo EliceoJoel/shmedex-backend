@@ -238,6 +238,22 @@ public class PostController {
     }
 
     /**
+     * Gets list of post followed by a user
+     * @param userId - User id
+     * @return - Response Entity
+     */
+    @GetMapping("/followed/{userId}")
+    public ResponseEntity<List<Post>> getPostsFollowedByUser(@PathVariable Long userId) {
+        User user = getUserRecord(userId);
+        if(user == null) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+        List<Post> followedPosts = user.getFollowedPosts();
+
+        return ResponseEntity.ok(followedPosts);
+    }
+
+    /**
      * Gets the record of the Post based by id
      * @param id - Post id
      * @return - Post or null
