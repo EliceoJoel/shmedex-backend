@@ -4,18 +4,20 @@ import com.eherbas.shmedex.model.*;
 import com.eherbas.shmedex.repository.CommentRepository;
 import com.eherbas.shmedex.repository.PostRepository;
 import com.eherbas.shmedex.repository.UserRepository;
-import org.antlr.v4.runtime.misc.LogManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/v1/post")
+@RequiredArgsConstructor
 public class PostController {
     @Autowired
     private PostRepository postRepository;
@@ -251,6 +253,20 @@ public class PostController {
         List<Post> followedPosts = user.getFollowedPosts();
 
         return ResponseEntity.ok(followedPosts);
+    }
+
+    @GetMapping("/not-followed/{userId}")
+    public ResponseEntity<?> getPostsNotFollowedByUser(@PathVariable Long userId) {
+        User user = getUserRecord(userId);
+        if(user == null) {
+            return new ResponseEntity<>("User not founded to get posts not followed", HttpStatus.NOT_FOUND);
+        }
+        List<Post> allPosts = postRepository.findAll();
+        List<Post> notFollowedPosts = allPosts.stream()
+                .filter(post -> !user.getFollowedPosts().contains(post))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(notFollowedPosts);
     }
 
     /**

@@ -1,13 +1,12 @@
 package com.eherbas.shmedex.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 
 @Data
 @NoArgsConstructor
@@ -22,8 +21,7 @@ public class Comment {
     @Column(length = 5000)
     private String content;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
-    private Date createdAt;
+    private ZonedDateTime createdAt;
 
     @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)

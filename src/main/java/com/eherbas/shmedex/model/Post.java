@@ -1,14 +1,14 @@
 package com.eherbas.shmedex.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Data
@@ -29,13 +29,11 @@ public class Post {
 
     private long likes;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
-    private Date createdAt;
+    private ZonedDateTime createdAt;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
-    private Date updatedAt;
+    private ZonedDateTime  updatedAt;
 
-    @JsonBackReference
+    @JsonBackReference("userReference")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
@@ -44,7 +42,7 @@ public class Post {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL)
     private List<Comment> comments;
 
-    @JsonBackReference
+    @JsonIgnore
     @ManyToMany(mappedBy = "followedPosts")
     private List<User> usersWhoFollows;
 }
