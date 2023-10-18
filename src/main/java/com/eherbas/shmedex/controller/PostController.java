@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -245,28 +246,30 @@ public class PostController {
      * @return - Response Entity
      */
     @GetMapping("/followed/{userId}")
-    public ResponseEntity<List<Post>> getPostsFollowedByUser(@PathVariable Long userId) {
-        User user = getUserRecord(userId);
-        if(user == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
-        List<Post> followedPosts = user.getFollowedPosts();
-
-        return ResponseEntity.ok(followedPosts);
+    public ResponseEntity<?> getPostsFollowedByUser(@PathVariable Long userId) {
+        List<Object[]> postsWithUserNames = postRepository.findPostsFollowedByUserWithUserName(userId);
+        return getPostListWithUserName(postsWithUserNames);
     }
 
+    /**
+     * Gets list of post not followed by a user
+     * @param userId - User id
+     * @return - Response Entity
+     */
     @GetMapping("/not-followed/{userId}")
     public ResponseEntity<?> getPostsNotFollowedByUser(@PathVariable Long userId) {
-        User user = getUserRecord(userId);
-        if(user == null) {
-            return new ResponseEntity<>("User not founded to get posts not followed", HttpStatus.NOT_FOUND);
-        }
-        List<Post> allPosts = postRepository.findAll();
-        List<Post> notFollowedPosts = allPosts.stream()
-                .filter(post -> !user.getFollowedPosts().contains(post))
-                .collect(Collectors.toList());
+        List<Object[]> postsWithUserNames = postRepository.findPostsNotFollowedByUserWithUserName(userId);
+        return getPostListWithUserName(postsWithUserNames);
+    }
 
-        return ResponseEntity.ok(notFollowedPosts);
+    private ResponseEntity<?> getPostListWithUserName(List<Object[]> postsWithUserNames) {
+        List<PostWithUserName> result = new ArrayList<>();
+        for (Object[] objects : postsWithUserNames) {
+            Post post = (Post) objects[0];
+            String userName = (String) objects[1];
+            result.add(new PostWithUserName(post, userName));
+        }
+        return ResponseEntity.ok(result);
     }
 
     /**
