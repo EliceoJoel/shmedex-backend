@@ -58,17 +58,20 @@ public class PostController {
     }
 
     /**
-     * Gets a post by id
+     * Gets a post by id with username of the creator
      * @param id - Post id
      * @return - Response Entity
      */
     @GetMapping("{id}")
-    public ResponseEntity<Post> getById(@PathVariable("id") Long id) {
+    public ResponseEntity<?> getById(@PathVariable("id") Long id) {
         try {
             Post foundPost = getPostRecord(id);
-            return foundPost != null
-                    ? new ResponseEntity<>(foundPost, HttpStatus.OK)
-                    : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            if (foundPost != null) {
+                String username = foundPost.getUser().getName() + " " + foundPost.getUser().getLastName();
+                PostWithUserName postInfo = new PostWithUserName(foundPost, username, foundPost.getUsersWhoFollows().size());
+                return new ResponseEntity<>(postInfo, HttpStatus.OK);
+            }
+            return new ResponseEntity<>("Post with id: " + id + "was not found", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -267,7 +270,8 @@ public class PostController {
         for (Object[] objects : postsWithUserNames) {
             Post post = (Post) objects[0];
             String userName = (String) objects[1];
-            result.add(new PostWithUserName(post, userName));
+            Integer numberOfFollowers = (Integer) objects[2];
+            result.add(new PostWithUserName(post, userName, numberOfFollowers));
         }
         return ResponseEntity.ok(result);
     }
