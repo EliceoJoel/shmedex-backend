@@ -8,4 +8,5 @@ import lombok.Data;
 public class PostWithUserName {
     private Post post;
     private String userName;
+    private Integer numberOfFollowers;
 }
