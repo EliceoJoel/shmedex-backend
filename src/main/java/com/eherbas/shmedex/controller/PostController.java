@@ -276,6 +276,19 @@ public class PostController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/user/{userId}")
+    private ResponseEntity<?> getUserPosts(@PathVariable Long userId) {
+        User user = getUserRecord(userId);
+        if(user == null) {
+            return new ResponseEntity<>("User with id " +  userId + " was not found", HttpStatus.NOT_FOUND);
+        }
+        List<PostWithUserName> result = new ArrayList<>();
+        for (Post post : user.getPosts()) {
+            result.add(new PostWithUserName(post, user.getFullName(), post.getUsersWhoFollows().size()));
+        }
+        return ResponseEntity.ok(result);
+    }
+
     /**
      * Gets the record of the Post based by id
      * @param id - Post id
@@ -286,6 +299,11 @@ public class PostController {
         return postObj.orElse(null);
     }
 
+    /**
+     * Gets the record of the User based by id
+     * @param id - User id
+     * @return - User or null
+     */
     private User getUserRecord(long id) {
         Optional<User> userObj = userRepository.findById(id);
         return userObj.orElse(null);

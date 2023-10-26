@@ -47,6 +47,10 @@ public class User implements UserDetails {
     )
     private List<Post> followedPosts;
 
+    public String getFullName() {
+        return name + " " + lastName;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.emptyList();
