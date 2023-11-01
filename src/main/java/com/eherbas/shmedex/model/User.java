@@ -47,6 +47,10 @@ public class User implements UserDetails {
     )
     private List<Post> followedPosts;
 
+    @JsonManagedReference("userCommentReference")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Comment> comments;
+
     public String getFullName() {
         return name + " " + lastName;
     }
