@@ -38,7 +38,7 @@ public class Post {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @JsonManagedReference
+    @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL)
     private List<Comment> comments;
 

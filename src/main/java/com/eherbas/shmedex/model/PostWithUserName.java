@@ -9,4 +9,5 @@ public class PostWithUserName {
     private Post post;
     private String userName;
     private Integer numberOfFollowers;
+    private Integer numberOfComments;
 }

@@ -68,7 +68,7 @@ public class PostController {
             Post foundPost = getPostRecord(id);
             if (foundPost != null) {
                 String username = foundPost.getUser().getName() + " " + foundPost.getUser().getLastName();
-                PostWithUserName postInfo = new PostWithUserName(foundPost, username, foundPost.getUsersWhoFollows().size());
+                PostWithUserName postInfo = new PostWithUserName(foundPost, username, foundPost.getUsersWhoFollows().size(), foundPost.getComments().size());
                 return new ResponseEntity<>(postInfo, HttpStatus.OK);
             }
             return new ResponseEntity<>("Post with id: " + id + "was not found", HttpStatus.NOT_FOUND);
@@ -203,13 +203,17 @@ public class PostController {
      * @return - Response Entity
      */
     @GetMapping("/{id}/comments")
-    public ResponseEntity<List<Comment>> getComments(@PathVariable Long id) {
+    public ResponseEntity<?> getComments(@PathVariable Long id) {
         Post post = getPostRecord(id);
         if (post == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Post with id: " + id + " was not found", HttpStatus.NOT_FOUND);
         }
         List<Comment> comments = commentRepository.findByPost(post);
-        return ResponseEntity.ok(comments);
+        List<CommentResponse> commentResponse = new ArrayList<>();
+        for(Comment comment: comments) {
+            commentResponse.add(new CommentResponse(comment, comment.getUser().getFullName()));
+        }
+        return ResponseEntity.ok(commentResponse);
     }
 
     /**
@@ -271,7 +275,8 @@ public class PostController {
             Post post = (Post) objects[0];
             String userName = (String) objects[1];
             Integer numberOfFollowers = (Integer) objects[2];
-            result.add(new PostWithUserName(post, userName, numberOfFollowers));
+            Integer numberOfComments = (Integer) objects[3];
+            result.add(new PostWithUserName(post, userName, numberOfFollowers, numberOfComments));
         }
         return ResponseEntity.ok(result);
     }
@@ -284,7 +289,7 @@ public class PostController {
         }
         List<PostWithUserName> result = new ArrayList<>();
         for (Post post : user.getPosts()) {
-            result.add(new PostWithUserName(post, user.getFullName(), post.getUsersWhoFollows().size()));
+            result.add(new PostWithUserName(post, user.getFullName(), post.getUsersWhoFollows().size(), post.getComments().size()));
         }
         return ResponseEntity.ok(result);
     }
