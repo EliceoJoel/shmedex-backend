@@ -27,8 +27,6 @@ public class Post {
     @Column(length = 2000)
     private String image;
 
-    private long likes;
-
     private ZonedDateTime createdAt;
 
     private ZonedDateTime  updatedAt;
@@ -45,4 +43,8 @@ public class Post {
     @JsonIgnore
     @ManyToMany(mappedBy = "followedPosts")
     private List<User> usersWhoFollows;
+
+    @JsonIgnore
+    @ManyToMany(mappedBy = "likedPosts")
+    private List<User> userWhoLikes;
 }

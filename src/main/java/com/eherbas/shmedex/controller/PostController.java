@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -45,30 +44,24 @@ public class PostController {
     }
 
     /**
-     * Gets all posts
-     * @return - Response Entity
-     */
-    @GetMapping
-    public ResponseEntity<List<Post>> getAll() {
-        try {
-            return new ResponseEntity<>(postRepository.findAll(), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
      * Gets a post by id with username of the creator
      * @param id - Post id
      * @return - Response Entity
      */
-    @GetMapping("{id}")
-    public ResponseEntity<?> getById(@PathVariable("id") Long id) {
+    @PostMapping("{id}")
+    public ResponseEntity<?> getById(@PathVariable("id") Long id, @RequestBody User user) {
         try {
             Post foundPost = getPostRecord(id);
+            User loggedUser = getUserRecord(user.getId());
             if (foundPost != null) {
-                String username = foundPost.getUser().getName() + " " + foundPost.getUser().getLastName();
-                PostWithUserName postInfo = new PostWithUserName(foundPost, username, foundPost.getUsersWhoFollows().size(), foundPost.getComments().size());
+                PostResponse postInfo = new PostResponse(
+                        foundPost,
+                        foundPost.getUser().getFullName(),
+                        foundPost.getUsersWhoFollows().size(),
+                        foundPost.getComments().size(),
+                        foundPost.getUserWhoLikes().size(),
+                        foundPost.getUsersWhoFollows().contains(loggedUser),
+                        foundPost.getUserWhoLikes().contains(loggedUser));
                 return new ResponseEntity<>(postInfo, HttpStatus.OK);
             }
             return new ResponseEntity<>("Post with id: " + id + "was not found", HttpStatus.NOT_FOUND);
@@ -124,59 +117,59 @@ public class PostController {
      * @param id - Post id
      * @return - Response Entity
      */
-    @GetMapping("/{id}/stats")
-    public ResponseEntity<PostStats> getPostStats(@PathVariable Long id) {
-        try {
-            Post foundPost = getPostRecord(id);
-            if(foundPost == null) {
-                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-            }
-            long likes = foundPost.getLikes();
-            long comments = foundPost.getComments() != null ? foundPost.getComments().size() : 0;
-            long followers = foundPost.getUsersWhoFollows() != null ? foundPost.getUsersWhoFollows().size() : 0;
-            PostStats postStats = new PostStats(likes, comments, followers);
-            return new ResponseEntity<>(postStats, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+//    @GetMapping("/{id}/stats")
+//    public ResponseEntity<PostStats> getPostStats(@PathVariable Long id) {
+//        try {
+//            Post foundPost = getPostRecord(id);
+//            if(foundPost == null) {
+//                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+//            }
+//            long likes = foundPost.getLikes();
+//            long comments = foundPost.getComments() != null ? foundPost.getComments().size() : 0;
+//            long followers = foundPost.getUsersWhoFollows() != null ? foundPost.getUsersWhoFollows().size() : 0;
+//            PostStats postStats = new PostStats(likes, comments, followers);
+//            return new ResponseEntity<>(postStats, HttpStatus.OK);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
     /**
      * Increases likes of a Post
      * @param id - Post id
      * @return - Response Entity
      */
-    @PutMapping("/{id}/like")
-    public ResponseEntity<String> likePost(@PathVariable Long id) {
-        Post foundedPost = getPostRecord(id);
-        if(foundedPost == null) {
-            return new ResponseEntity<>("Post with ID: " + id + "does not exist", HttpStatus.NOT_FOUND);
-        }
-        foundedPost.setLikes(foundedPost.getLikes() + 1);
-        postRepository.save(foundedPost);
-        return ResponseEntity.ok("Like added to the post with ID: " + id);
-    }
+//    @PutMapping("/{id}/like")
+//    public ResponseEntity<String> likePost(@PathVariable Long id) {
+//        Post foundedPost = getPostRecord(id);
+//        if(foundedPost == null) {
+//            return new ResponseEntity<>("Post with ID: " + id + "does not exist", HttpStatus.NOT_FOUND);
+//        }
+//        foundedPost.setLikes(foundedPost.getLikes() + 1);
+//        postRepository.save(foundedPost);
+//        return ResponseEntity.ok("Like added to the post with ID: " + id);
+//    }
 
     /**
      * Removes a like from a Post
      * @param id - Post id
      * @return - Response Entity
      */
-    @PutMapping("/{id}/unlike")
-    public ResponseEntity<String> unlikePost(@PathVariable Long id) {
-        Post foundedPost = getPostRecord(id);
-        if(foundedPost == null) {
-            return new ResponseEntity<>("Post with ID: " + id + "does not exist", HttpStatus.NOT_FOUND);
-        }
-
-        if (foundedPost.getLikes() > 0) {
-            foundedPost.setLikes(foundedPost.getLikes() - 1);
-            postRepository.save(foundedPost);
-            return ResponseEntity.ok("Like removed from the post with ID: " + id);
-        } else {
-            return ResponseEntity.badRequest().body("The post with ID: " + id + " has no likes to remove.");
-        }
-    }
+//    @PutMapping("/{id}/unlike")
+//    public ResponseEntity<String> unlikePost(@PathVariable Long id) {
+//        Post foundedPost = getPostRecord(id);
+//        if(foundedPost == null) {
+//            return new ResponseEntity<>("Post with ID: " + id + "does not exist", HttpStatus.NOT_FOUND);
+//        }
+//
+//        if (foundedPost.getLikes() > 0) {
+//            foundedPost.setLikes(foundedPost.getLikes() - 1);
+//            postRepository.save(foundedPost);
+//            return ResponseEntity.ok("Like removed from the post with ID: " + id);
+//        } else {
+//            return ResponseEntity.badRequest().body("The post with ID: " + id + " has no likes to remove.");
+//        }
+//    }
 
     /**
      * Adds a new Comment for a Post
@@ -185,12 +178,12 @@ public class PostController {
      * @return - Response Entity
      */
     @PostMapping("/{id}/comment")
-    public ResponseEntity<Comment> addNewComment(
+    public ResponseEntity<?> addNewComment(
             @PathVariable Long id,
             @RequestBody Comment newComment) {
         Post post = getPostRecord(id);
         if(post == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Post with id: " + id + " was not found.", HttpStatus.NOT_FOUND);
         }
         newComment.setPost(post);
         Comment savedComment = commentRepository.save(newComment);
@@ -254,8 +247,9 @@ public class PostController {
      */
     @GetMapping("/followed/{userId}")
     public ResponseEntity<?> getPostsFollowedByUser(@PathVariable Long userId) {
-        List<Object[]> postsWithUserNames = postRepository.findPostsFollowedByUserWithUserName(userId);
-        return getPostListWithUserName(postsWithUserNames);
+        List<Object[]> followedPosts = postRepository.findPostsFollowedByUserWithUserName(userId);
+        User userLogged = getUserRecord(userId);
+        return getResponsePosts(followedPosts, userLogged);
     }
 
     /**
@@ -265,18 +259,29 @@ public class PostController {
      */
     @GetMapping("/not-followed/{userId}")
     public ResponseEntity<?> getPostsNotFollowedByUser(@PathVariable Long userId) {
-        List<Object[]> postsWithUserNames = postRepository.findPostsNotFollowedByUserWithUserName(userId);
-        return getPostListWithUserName(postsWithUserNames);
+        List<Object[]> notFollowedPosts = postRepository.findPostsNotFollowedByUserWithUserName(userId);
+        User userLogged = getUserRecord(userId);
+        return getResponsePosts(notFollowedPosts, userLogged);
     }
 
-    private ResponseEntity<?> getPostListWithUserName(List<Object[]> postsWithUserNames) {
-        List<PostWithUserName> result = new ArrayList<>();
-        for (Object[] objects : postsWithUserNames) {
+    private ResponseEntity<?> getResponsePosts(List<Object[]> posts, User userLogged) {
+        List<PostResponse> result = new ArrayList<>();
+        for (Object[] objects : posts) {
             Post post = (Post) objects[0];
             String userName = (String) objects[1];
             Integer numberOfFollowers = (Integer) objects[2];
             Integer numberOfComments = (Integer) objects[3];
-            result.add(new PostWithUserName(post, userName, numberOfFollowers, numberOfComments));
+            Integer numberOfLikes = (Integer) objects[4];
+            result.add(new PostResponse(
+                    post,
+                    userName,
+                    numberOfFollowers,
+                    numberOfComments,
+                    numberOfLikes,
+                    post.getUsersWhoFollows().contains(userLogged),
+                    post.getUserWhoLikes().contains(userLogged)
+                )
+            );
         }
         return ResponseEntity.ok(result);
     }
@@ -287,9 +292,18 @@ public class PostController {
         if(user == null) {
             return new ResponseEntity<>("User with id " +  userId + " was not found", HttpStatus.NOT_FOUND);
         }
-        List<PostWithUserName> result = new ArrayList<>();
+        List<PostResponse> result = new ArrayList<>();
         for (Post post : user.getPosts()) {
-            result.add(new PostWithUserName(post, user.getFullName(), post.getUsersWhoFollows().size(), post.getComments().size()));
+            result.add(new PostResponse(
+                    post,
+                    user.getFullName(),
+                    post.getUsersWhoFollows().size(),
+                    post.getComments().size(),
+                    post.getUserWhoLikes().size(),
+                    post.getUsersWhoFollows().contains(user),
+                    post.getUserWhoLikes().contains(user)
+                )
+            );
         }
         return ResponseEntity.ok(result);
     }

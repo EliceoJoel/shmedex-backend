@@ -5,9 +5,12 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class PostWithUserName {
+public class PostResponse {
     private Post post;
     private String userName;
     private Integer numberOfFollowers;
     private Integer numberOfComments;
+    private Integer numberOfLikes;
+    private Boolean isFollowedByUser;
+    private Boolean isLikedByUser;
 }
