@@ -113,63 +113,31 @@ public class PostController {
     }
 
     /**
-     * Get amount of likes, comments, and follows of a post
+     * A user likes o dislikes a Post
      * @param id - Post id
      * @return - Response Entity
      */
-//    @GetMapping("/{id}/stats")
-//    public ResponseEntity<PostStats> getPostStats(@PathVariable Long id) {
-//        try {
-//            Post foundPost = getPostRecord(id);
-//            if(foundPost == null) {
-//                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-//            }
-//            long likes = foundPost.getLikes();
-//            long comments = foundPost.getComments() != null ? foundPost.getComments().size() : 0;
-//            long followers = foundPost.getUsersWhoFollows() != null ? foundPost.getUsersWhoFollows().size() : 0;
-//            PostStats postStats = new PostStats(likes, comments, followers);
-//            return new ResponseEntity<>(postStats, HttpStatus.OK);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
+    @PutMapping("/{id}/toggle-like")
+    public ResponseEntity<String> toggleLikePost(@PathVariable Long id, @RequestBody UserIdRequest userIdRequest) {
+        Post foundPost = getPostRecord(id);
+        User foundUser = getUserRecord(userIdRequest.getId());
+        if(foundPost == null) {
+            return new ResponseEntity<>("Post with ID: " + id + "does not exist", HttpStatus.NOT_FOUND);
+        }
+        if(foundUser == null) {
+            return new ResponseEntity<>("User with ID: " + userIdRequest.getId() + "does not exist", HttpStatus.NOT_FOUND);
+        }
 
-    /**
-     * Increases likes of a Post
-     * @param id - Post id
-     * @return - Response Entity
-     */
-//    @PutMapping("/{id}/like")
-//    public ResponseEntity<String> likePost(@PathVariable Long id) {
-//        Post foundedPost = getPostRecord(id);
-//        if(foundedPost == null) {
-//            return new ResponseEntity<>("Post with ID: " + id + "does not exist", HttpStatus.NOT_FOUND);
-//        }
-//        foundedPost.setLikes(foundedPost.getLikes() + 1);
-//        postRepository.save(foundedPost);
-//        return ResponseEntity.ok("Like added to the post with ID: " + id);
-//    }
-
-    /**
-     * Removes a like from a Post
-     * @param id - Post id
-     * @return - Response Entity
-     */
-//    @PutMapping("/{id}/unlike")
-//    public ResponseEntity<String> unlikePost(@PathVariable Long id) {
-//        Post foundedPost = getPostRecord(id);
-//        if(foundedPost == null) {
-//            return new ResponseEntity<>("Post with ID: " + id + "does not exist", HttpStatus.NOT_FOUND);
-//        }
-//
-//        if (foundedPost.getLikes() > 0) {
-//            foundedPost.setLikes(foundedPost.getLikes() - 1);
-//            postRepository.save(foundedPost);
-//            return ResponseEntity.ok("Like removed from the post with ID: " + id);
-//        } else {
-//            return ResponseEntity.badRequest().body("The post with ID: " + id + " has no likes to remove.");
-//        }
-//    }
+        if (foundUser.getLikedPosts().contains(foundPost)) {
+            foundUser.getLikedPosts().remove(foundPost);
+            userRepository.save(foundUser);
+            return ResponseEntity.ok("User dislikes the post with ID: " + id);
+        } else {
+            foundUser.getLikedPosts().add(foundPost);
+            userRepository.save(foundUser);
+            return ResponseEntity.ok("User likes the post with ID: " + id);
+        }
+    }
 
     /**
      * Adds a new Comment for a Post
