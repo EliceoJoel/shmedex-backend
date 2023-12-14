@@ -101,9 +101,15 @@ public class PostController {
     @DeleteMapping("{id}")
     public ResponseEntity<HttpStatus> deleteById(@PathVariable("id") Long id) {
         try {
-            Post emp = getPostRecord(id);
-            if (emp != null) {
-                postRepository.deleteById(id);
+            Post postFound = getPostRecord(id);
+            if (postFound != null) {
+                for (User user : postFound.getUsersWhoFollows()) {
+                    user.getFollowedPosts().remove(postFound);
+                }
+                for (User user : postFound.getUserWhoLikes()) {
+                    user.getLikedPosts().remove(postFound);
+                }
+                postRepository.delete(postFound);
                 return new ResponseEntity<>(HttpStatus.OK);
             }
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -183,7 +189,7 @@ public class PostController {
      * @param userIdRequest - User id request
      * @return - Response Entity
      */
-    @PostMapping("/{id}/toggle-follow")
+    @PutMapping("/{id}/toggle-follow")
     public ResponseEntity<String> toggleFollowPost(
             @PathVariable Long id,
             @RequestBody UserIdRequest userIdRequest) {
