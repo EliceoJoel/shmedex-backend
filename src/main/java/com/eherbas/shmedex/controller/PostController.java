@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +37,8 @@ public class PostController {
     @PostMapping
     public ResponseEntity<Post> create(@RequestBody Post newPost) {
         try {
+            newPost.setCreatedAt(ZonedDateTime.now());
+            newPost.setUpdatedAt(ZonedDateTime.now());
             Post createdPost = postRepository.save(newPost);
             return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
         } catch (Exception e) {
