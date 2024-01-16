@@ -20,16 +20,6 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(length = 5000)
-    private String content;
-
-    @Column(length = 2000)
-    private String image;
-
-    private ZonedDateTime createdAt;
-
-    private ZonedDateTime  updatedAt;
-
     @JsonBackReference("userReference")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -38,6 +28,10 @@ public class Post {
     @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL)
     private List<Comment> comments;
+
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL)
+    private List<PostDay> postDays;
 
     @JsonIgnore
     @ManyToMany(mappedBy = "followedPosts")
