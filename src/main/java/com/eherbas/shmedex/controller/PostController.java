@@ -1,7 +1,9 @@
 package com.eherbas.shmedex.controller;
 
+import com.eherbas.shmedex.dto.UserAndDayPostDTO;
 import com.eherbas.shmedex.model.*;
 import com.eherbas.shmedex.repository.CommentRepository;
+import com.eherbas.shmedex.repository.PostDayRepository;
 import com.eherbas.shmedex.repository.PostRepository;
 import com.eherbas.shmedex.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +32,9 @@ public class PostController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PostDayRepository postDayRepository;
+
     /**
      * Creates a post
      * @param newPost - New Post data
@@ -36,7 +43,18 @@ public class PostController {
     @PostMapping
     public ResponseEntity<Post> create(@RequestBody Post newPost) {
         try {
+            PostDay initialPostDay = newPost.getPostDays().get(0);
+            if(newPost.getPostDays().size() == 1) {
+                initialPostDay.setCreatedAt(ZonedDateTime.now());
+                initialPostDay.setUpdatedAt(ZonedDateTime.now());
+            }
+
+            newPost.setPostDays(Collections.emptyList());
             Post createdPost = postRepository.save(newPost);
+
+            initialPostDay.setPost(createdPost);
+            postDayRepository.save(initialPostDay);
+
             return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -49,10 +67,10 @@ public class PostController {
      * @return - Response Entity
      */
     @PostMapping("{id}")
-    public ResponseEntity<?> getById(@PathVariable("id") Long id, @RequestBody User user) {
+    public ResponseEntity<?> getById(@PathVariable("id") Long id, @RequestBody UserAndDayPostDTO userAndDayPostDTO) {
         try {
             Post foundPost = getPostRecord(id);
-            User loggedUser = getUserRecord(user.getId());
+            User loggedUser = getUserRecord(userAndDayPostDTO.getUserId());
             if (foundPost != null) {
                 PostResponse postInfo = new PostResponse(
                         foundPost,
@@ -61,13 +79,23 @@ public class PostController {
                         foundPost.getComments().size(),
                         foundPost.getUserWhoLikes().size(),
                         foundPost.getUsersWhoFollows().contains(loggedUser),
-                        foundPost.getUserWhoLikes().contains(loggedUser));
+                        foundPost.getUserWhoLikes().contains(loggedUser),
+                        getPostDayByDay(foundPost.getPostDays(), userAndDayPostDTO.getPostDay()));
                 return new ResponseEntity<>(postInfo, HttpStatus.OK);
             }
             return new ResponseEntity<>("Post with id: " + id + "was not found", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private PostDay getPostDayByDay(List<PostDay> postDayList, int dayToFind) {
+        for (PostDay postDay : postDayList) {
+            if (postDay.getDay() == dayToFind) {
+                return postDay;
+            }
+        }
+        return null;
     }
 
     /**
@@ -80,13 +108,13 @@ public class PostController {
     public ResponseEntity<Post> updateById(@PathVariable("id") Long id, @RequestBody Post post) {
         try {
             //check if employee exist in database
-            Post postObj = getPostRecord(id);
-            if (postObj != null) {
-                postObj.setContent(post.getContent());
-                postObj.setImage(post.getImage());
-                postObj.setUpdatedAt(post.getUpdatedAt());
-                return new ResponseEntity<>(postRepository.save(postObj), HttpStatus.OK);
-            }
+//            Post postObj = getPostRecord(id);
+//            if (postObj != null) {
+//                postObj.setContent(post.getContent());
+//                postObj.setImage(post.getImage());
+//                postObj.setUpdatedAt(post.getUpdatedAt());
+//                return new ResponseEntity<>(postRepository.save(postObj), HttpStatus.OK);
+//            }
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -253,7 +281,8 @@ public class PostController {
                     numberOfComments,
                     numberOfLikes,
                     post.getUsersWhoFollows().contains(userLogged),
-                    post.getUserWhoLikes().contains(userLogged)
+                    post.getUserWhoLikes().contains(userLogged),
+                    post.getPostDays().get(0)
                 )
             );
         }
@@ -275,7 +304,8 @@ public class PostController {
                     post.getComments().size(),
                     post.getUserWhoLikes().size(),
                     post.getUsersWhoFollows().contains(user),
-                    post.getUserWhoLikes().contains(user)
+                    post.getUserWhoLikes().contains(user),
+                    post.getPostDays().get(0)
                 )
             );
         }
