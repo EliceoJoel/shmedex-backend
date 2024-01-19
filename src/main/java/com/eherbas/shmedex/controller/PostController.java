@@ -1,5 +1,6 @@
 package com.eherbas.shmedex.controller;
 
+import com.eherbas.shmedex.dto.NewPostDTO;
 import com.eherbas.shmedex.dto.UserAndDayPostDTO;
 import com.eherbas.shmedex.model.*;
 import com.eherbas.shmedex.repository.CommentRepository;
@@ -37,19 +38,18 @@ public class PostController {
 
     /**
      * Creates a post
-     * @param newPost - New Post data
+     * @param newPostDTO - New Post data
      * @return - Response Entity
      */
     @PostMapping
-    public ResponseEntity<Post> create(@RequestBody Post newPost) {
+    public ResponseEntity<?> create(@RequestBody NewPostDTO newPostDTO) {
         try {
-            PostDay initialPostDay = newPost.getPostDays().get(0);
-            if(newPost.getPostDays().size() == 1) {
-                initialPostDay.setCreatedAt(ZonedDateTime.now());
-                initialPostDay.setUpdatedAt(ZonedDateTime.now());
-            }
+            PostDay initialPostDay = newPostDTO.getPostDay();
+            initialPostDay.setCreatedAt(ZonedDateTime.now());
+            initialPostDay.setUpdatedAt(ZonedDateTime.now());
 
-            newPost.setPostDays(Collections.emptyList());
+            Post newPost = new Post();
+            newPost.setUser(newPostDTO.getUser());
             Post createdPost = postRepository.save(newPost);
 
             initialPostDay.setPost(createdPost);
@@ -57,7 +57,7 @@ public class PostController {
 
             return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -80,7 +80,7 @@ public class PostController {
                         foundPost.getUserWhoLikes().size(),
                         foundPost.getUsersWhoFollows().contains(loggedUser),
                         foundPost.getUserWhoLikes().contains(loggedUser),
-                        getPostDayByDay(foundPost.getPostDays(), userAndDayPostDTO.getPostDay()));
+                        Collections.singletonList(getPostDayByDay(foundPost.getPostDays(), userAndDayPostDTO.getPostDay())));
                 return new ResponseEntity<>(postInfo, HttpStatus.OK);
             }
             return new ResponseEntity<>("Post with id: " + id + "was not found", HttpStatus.NOT_FOUND);
@@ -282,7 +282,7 @@ public class PostController {
                     numberOfLikes,
                     post.getUsersWhoFollows().contains(userLogged),
                     post.getUserWhoLikes().contains(userLogged),
-                    post.getPostDays().get(0)
+                    post.getPostDays()
                 )
             );
         }
@@ -305,7 +305,7 @@ public class PostController {
                     post.getUserWhoLikes().size(),
                     post.getUsersWhoFollows().contains(user),
                     post.getUserWhoLikes().contains(user),
-                    post.getPostDays().get(0)
+                    post.getPostDays()
                 )
             );
         }
