@@ -3,6 +3,8 @@ package com.eherbas.shmedex.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 public class PostResponse {
@@ -13,5 +15,5 @@ public class PostResponse {
     private Integer numberOfLikes;
     private Boolean isFollowedByUser;
     private Boolean isLikedByUser;
-    private PostDay postDay;
+    private List<PostDay> postDays;
 }
