@@ -1,7 +1,6 @@
 package com.eherbas.shmedex.dto;
 
 import com.eherbas.shmedex.model.PostDay;
-import com.eherbas.shmedex.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class NewPostDTO {
-    private User user;
+public class AddPostDayDTO {
+    private Long postId;
     private PostDay postDay;
 }

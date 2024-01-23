@@ -1,5 +1,6 @@
 package com.eherbas.shmedex.controller;
 
+import com.eherbas.shmedex.dto.AddPostDayDTO;
 import com.eherbas.shmedex.dto.NewPostDTO;
 import com.eherbas.shmedex.dto.UserAndDayPostDTO;
 import com.eherbas.shmedex.model.*;
@@ -62,6 +63,67 @@ public class PostController {
     }
 
     /**
+     * Adds a new post day
+     * @param addPostDayDTO - New PostDay data with post id
+     * @return - Created PostDay entity
+     */
+    @PostMapping("day")
+    public ResponseEntity<?> addPostDay(@RequestBody AddPostDayDTO addPostDayDTO) {
+        try {
+            Post post = getPostRecord(addPostDayDTO.getPostId());
+            if(post == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post with id " + addPostDayDTO.getPostId() + " was not found.");
+            }
+
+            if(postDayRepository.findPostDayByPostAndDay(post, addPostDayDTO.getPostDay().getDay()) != null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Cannot add post day because day already exists");
+            }
+
+            PostDay postDay = addPostDayDTO.getPostDay();
+            postDay.setCreatedAt(ZonedDateTime.now());
+            postDay.setUpdatedAt(ZonedDateTime.now());
+
+            postDay.setPost(post);
+            postDayRepository.save(postDay);
+
+            return new ResponseEntity<>(postDay, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Updates Post Day values according to post id
+     * @param id - Post id
+     * @param postDay - New Post Day data
+     * @return - Updated Post Day
+     */
+    @PutMapping("/{id}/day")
+    public ResponseEntity<?> updatePostDay(@PathVariable("id") Long id, @RequestBody PostDay postDay) {
+        try {
+            Post post = getPostRecord(id);
+            if(post == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post with id " + id + " was not found.");
+            }
+            PostDay foundPostDay = getPostDayRecord(postDay.getId());
+            if(foundPostDay == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post Day with id " + postDay.getId() + " was not found.");
+            }
+            PostDay postWithNewDay =  postDayRepository.findPostDayByPostAndDay(post, postDay.getDay());
+            if(postWithNewDay != null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Post Day with day " + postDay.getDay() + " already exists.");
+            }
+            foundPostDay.setDay(postDay.getDay());
+            foundPostDay.setContent(postDay.getContent());
+            foundPostDay.setImage(postDay.getImage());
+            foundPostDay.setUpdatedAt(ZonedDateTime.now());
+            return ResponseEntity.ok(postDayRepository.save(foundPostDay));
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Gets a post by id with username of the creator
      * @param id - Post id
      * @return - Response Entity
@@ -96,29 +158,6 @@ public class PostController {
             }
         }
         return null;
-    }
-
-    /**
-     * Updates the content, image and updatedAt values of a post
-     * @param id - Post id
-     * @param post - Post with updates
-     * @return - Response Entity
-     */
-    @PutMapping("{id}")
-    public ResponseEntity<Post> updateById(@PathVariable("id") Long id, @RequestBody Post post) {
-        try {
-            //check if employee exist in database
-//            Post postObj = getPostRecord(id);
-//            if (postObj != null) {
-//                postObj.setContent(post.getContent());
-//                postObj.setImage(post.getImage());
-//                postObj.setUpdatedAt(post.getUpdatedAt());
-//                return new ResponseEntity<>(postRepository.save(postObj), HttpStatus.OK);
-//            }
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     /**
@@ -330,5 +369,15 @@ public class PostController {
     private User getUserRecord(long id) {
         Optional<User> userObj = userRepository.findById(id);
         return userObj.orElse(null);
+    }
+
+    /**
+     * Gets the record of the PostDay based by id
+     * @param id - PostDay id
+     * @return - PostDay or null
+     */
+    private PostDay getPostDayRecord(long id) {
+        Optional<PostDay> postDayObj = postDayRepository.findById(id);
+        return postDayObj.orElse(null);
     }
 }
