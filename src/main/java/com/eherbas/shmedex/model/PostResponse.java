@@ -15,5 +15,6 @@ public class PostResponse {
     private Integer numberOfLikes;
     private Boolean isFollowedByUser;
     private Boolean isLikedByUser;
+    private Boolean isUserPost;
     private List<PostDay> postDays;
 }

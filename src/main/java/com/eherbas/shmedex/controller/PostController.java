@@ -142,6 +142,7 @@ public class PostController {
                         foundPost.getUserWhoLikes().size(),
                         foundPost.getUsersWhoFollows().contains(loggedUser),
                         foundPost.getUserWhoLikes().contains(loggedUser),
+                        foundPost.getUser().getId() == loggedUser.getId(),
                         Collections.singletonList(getPostDayByDay(foundPost.getPostDays(), userAndDayPostDTO.getPostDay())));
                 return new ResponseEntity<>(postInfo, HttpStatus.OK);
             }
@@ -321,6 +322,7 @@ public class PostController {
                     numberOfLikes,
                     post.getUsersWhoFollows().contains(userLogged),
                     post.getUserWhoLikes().contains(userLogged),
+                    Boolean.FALSE,
                     post.getPostDays()
                 )
             );
@@ -344,6 +346,7 @@ public class PostController {
                     post.getUserWhoLikes().size(),
                     post.getUsersWhoFollows().contains(user),
                     post.getUserWhoLikes().contains(user),
+                    Boolean.TRUE,
                     post.getPostDays()
                 )
             );
