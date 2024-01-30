@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -32,6 +33,15 @@ public class PostDayController {
             }
             return ResponseEntity.ok(postDayRepository.findPostDaysByPost(post));
         } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/day-list/{postId}")
+    public ResponseEntity<?> getDaysByPostId(@PathVariable Long postId) {
+        try {
+            return ResponseEntity.ok(postDayRepository.findDaysByPostId(postId));
+        }catch (Exception e) {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
