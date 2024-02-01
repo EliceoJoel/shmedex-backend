@@ -15,10 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -109,8 +106,8 @@ public class PostController {
             if(foundPostDay == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post Day with id " + postDay.getId() + " was not found.");
             }
-            PostDay postWithNewDay =  postDayRepository.findPostDayByPostAndDay(post, postDay.getDay());
-            if(postWithNewDay != null) {
+            PostDay postDayWithTheNewDay =  postDayRepository.findPostDayByPostAndDay(post, postDay.getDay());
+            if(postDayWithTheNewDay != null && !Objects.equals(postDayWithTheNewDay.getId(), foundPostDay.getId())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Post Day with day " + postDay.getDay() + " already exists.");
             }
             foundPostDay.setDay(postDay.getDay());
