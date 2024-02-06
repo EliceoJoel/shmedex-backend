@@ -1,6 +1,8 @@
 package com.eherbas.shmedex.controller;
 
 import com.eherbas.shmedex.model.Post;
+import com.eherbas.shmedex.model.PostDay;
+import com.eherbas.shmedex.model.User;
 import com.eherbas.shmedex.repository.PostDayRepository;
 import com.eherbas.shmedex.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +48,21 @@ public class PostDayController {
         }
     }
 
-    /**git status
+    @DeleteMapping("{id}")
+    public ResponseEntity<?> deleteById(@PathVariable("id") Long id) {
+        try {
+            PostDay postDay = getPostDayRecord(id);
+            if (postDay == null) {
+                return new ResponseEntity<>("Post day with id " + id + " was not found.", HttpStatus.NOT_FOUND);
+            }
+            postDayRepository.delete(postDay);
+            return ResponseEntity.ok("Post day with id " + id + " removed successfully!");
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Gets the record of the Post based by id
      * @param id - Post id
      * @return - Post or null
@@ -54,5 +70,15 @@ public class PostDayController {
     private Post getPostRecord(long id) {
         Optional<Post> postObj = postRepository.findById(id);
         return postObj.orElse(null);
+    }
+
+    /**
+     * Gets the record of the PostDay based by id
+     * @param id - PostDay id
+     * @return - PostDay or null
+     */
+    private PostDay getPostDayRecord(long id) {
+        Optional<PostDay> postDay = postDayRepository.findById(id);
+        return postDay.orElse(null);
     }
 }

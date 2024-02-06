@@ -143,7 +143,7 @@ public class PostController {
                         Collections.singletonList(getPostDayByDay(foundPost.getPostDays(), userAndDayPostDTO.getPostDay())));
                 return new ResponseEntity<>(postInfo, HttpStatus.OK);
             }
-            return new ResponseEntity<>("Post with id: " + id + "was not found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Post with id: " + id + "was not found.", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -164,20 +164,30 @@ public class PostController {
      * @return - Response Entity
      */
     @DeleteMapping("{id}")
-    public ResponseEntity<HttpStatus> deleteById(@PathVariable("id") Long id) {
+    public ResponseEntity<?> deleteById(@PathVariable("id") Long id) {
         try {
-            Post postFound = getPostRecord(id);
-            if (postFound != null) {
-                for (User user : postFound.getUsersWhoFollows()) {
-                    user.getFollowedPosts().remove(postFound);
-                }
-                for (User user : postFound.getUserWhoLikes()) {
-                    user.getLikedPosts().remove(postFound);
-                }
-                postRepository.delete(postFound);
-                return new ResponseEntity<>(HttpStatus.OK);
+            Post post = getPostRecord(id);
+            if (post == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            if (!post.getComments().isEmpty()) {
+                commentRepository.deleteAll(post.getComments());
+            }
+            if (!post.getPostDays().isEmpty()) {
+                postDayRepository.deleteAll(post.getPostDays());
+            }
+            if(!post.getUsersWhoFollows().isEmpty()) {
+                for (User user : post.getUsersWhoFollows()) {
+                    user.getFollowedPosts().remove(post);
+                }
+            }
+            if(!post.getUserWhoLikes().isEmpty()) {
+                for (User user : post.getUserWhoLikes()) {
+                    user.getLikedPosts().remove(post);
+                }
+            }
+            postRepository.delete(post);
+            return ResponseEntity.ok("Post with id " + id + " removed successfully");
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -225,6 +235,7 @@ public class PostController {
             return new ResponseEntity<>("Post with id: " + id + " was not found.", HttpStatus.NOT_FOUND);
         }
         newComment.setPost(post);
+        newComment.setCreatedAt(ZonedDateTime.now());
         Comment savedComment = commentRepository.save(newComment);
         return new ResponseEntity<>(savedComment, HttpStatus.OK);
     }
