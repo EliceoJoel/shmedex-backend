@@ -2,7 +2,6 @@ package com.eherbas.shmedex.controller;
 
 import com.eherbas.shmedex.model.Post;
 import com.eherbas.shmedex.model.PostDay;
-import com.eherbas.shmedex.model.User;
 import com.eherbas.shmedex.repository.PostDayRepository;
 import com.eherbas.shmedex.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000")

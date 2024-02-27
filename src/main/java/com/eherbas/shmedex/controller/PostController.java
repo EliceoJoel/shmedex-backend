@@ -73,7 +73,7 @@ public class PostController {
             }
 
             if(postDayRepository.findPostDayByPostAndDay(post, addPostDayDTO.getPostDay().getDay()) != null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Cannot add post day because day already exists");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El dia de la experiencia ya existe");
             }
 
             PostDay postDay = addPostDayDTO.getPostDay();
