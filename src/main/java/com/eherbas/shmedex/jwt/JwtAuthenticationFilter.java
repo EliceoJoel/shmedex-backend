@@ -2,7 +2,7 @@ package com.eherbas.shmedex.jwt;
 
 import java.io.IOException;
 
-import com.eherbas.shmedex.service.JwtService;
+import com.eherbas.shmedex.service.implement.JwtService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;

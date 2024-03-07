@@ -1,4 +1,4 @@
-package com.eherbas.shmedex.service;
+package com.eherbas.shmedex.service.implement;
 
 import java.security.Key;
 import java.util.Date;

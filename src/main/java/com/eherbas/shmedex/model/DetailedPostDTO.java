@@ -2,12 +2,14 @@ package com.eherbas.shmedex.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class PostResponse {
+@NoArgsConstructor
+public class DetailedPostDTO {
     private Post post;
     private String userName;
     private Integer numberOfFollowers;
