@@ -1,4 +1,4 @@
-package com.eherbas.shmedex.service;
+package com.eherbas.shmedex.service.implement;
 
 import com.eherbas.shmedex.exception.RegistrationException;
 import com.eherbas.shmedex.model.AuthResponse;

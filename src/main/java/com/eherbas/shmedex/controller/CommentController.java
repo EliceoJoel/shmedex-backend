@@ -1,26 +1,28 @@
 package com.eherbas.shmedex.controller;
 
-import com.eherbas.shmedex.model.Comment;
-import com.eherbas.shmedex.repository.CommentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.eherbas.shmedex.dto.CommentDTO;
+import com.eherbas.shmedex.service.CommentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+
+@RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/comment")
 public class CommentController {
-    @Autowired
-    private CommentRepository commentRepository;
+   private final CommentService commentService;
 
-    @PostMapping(value = "comment")
-    public ResponseEntity<Comment> create(@RequestBody Comment newComment) {
+    @PostMapping
+    public ResponseEntity<?> create(@RequestBody CommentDTO commentDTO) {
         try {
-            Comment createdComment = commentRepository.save(newComment);
-            return new ResponseEntity<>(createdComment, HttpStatus.CREATED);
+            CommentDTO savedComment = commentService.save(commentDTO);
+            return ResponseEntity.created(new URI("/api/v1/comment/" + savedComment.getId())).body(savedComment);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

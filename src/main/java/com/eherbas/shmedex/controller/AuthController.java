@@ -2,7 +2,7 @@ package com.eherbas.shmedex.controller;
 
 import com.eherbas.shmedex.exception.RegistrationException;
 import com.eherbas.shmedex.model.AuthResponse;
-import com.eherbas.shmedex.service.AuthService;
+import com.eherbas.shmedex.service.implement.AuthService;
 import com.eherbas.shmedex.model.LoginRequest;
 import com.eherbas.shmedex.model.RegisterRequest;
 import org.springframework.http.HttpStatus;
