@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddPostDayDTO {
+public class NewPostDayDTO {
     private Long postId;
     private PostDay postDay;
 }

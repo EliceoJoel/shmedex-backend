@@ -77,7 +77,7 @@ public class PostController {
                     optionalUserDTO.get(),
                     userIdAndPostDayDTO.getPostDay()));
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -90,30 +90,14 @@ public class PostController {
     @DeleteMapping("{id}")
     public ResponseEntity<?> deleteById(@PathVariable("id") Long id) {
         try {
-            Post post = getPostRecord(id);
-            if (post == null) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            Optional<PostDTO> optionalPostDTO = postService.getById(id);
+            if (optionalPostDTO.isEmpty()) {
+                return new ResponseEntity<>("Post with id: " + id + "was not found.", HttpStatus.NOT_FOUND);
             }
-            if (!post.getComments().isEmpty()) {
-                commentRepository.deleteAll(post.getComments());
-            }
-            if (!post.getPostDays().isEmpty()) {
-                postDayRepository.deleteAll(post.getPostDays());
-            }
-            if (!post.getUsersWhoFollows().isEmpty()) {
-                for (User user : post.getUsersWhoFollows()) {
-                    user.getFollowedPosts().remove(post);
-                }
-            }
-            if (!post.getUserWhoLikes().isEmpty()) {
-                for (User user : post.getUserWhoLikes()) {
-                    user.getLikedPosts().remove(post);
-                }
-            }
-            postRepository.delete(post);
-            return ResponseEntity.ok("Post with id " + id + " removed successfully");
+            postService.deletePost(optionalPostDTO.get());
+            return ResponseEntity.ok("Post with id " + id + " deleted successfully");
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -125,23 +109,18 @@ public class PostController {
      */
     @PutMapping("/{id}/toggle-like")
     public ResponseEntity<String> toggleLikeOfAPost(@PathVariable Long id, @RequestBody UserIdDTO userIdDTO) {
-        Post foundPost = getPostRecord(id);
-        User foundUser = getUserRecord(userIdDTO.getId());
-        if (foundPost == null) {
-            return new ResponseEntity<>("Post with ID: " + id + "does not exist", HttpStatus.NOT_FOUND);
-        }
-        if (foundUser == null) {
-            return new ResponseEntity<>("User with ID: " + userIdDTO.getId() + "does not exist", HttpStatus.NOT_FOUND);
-        }
-
-        if (foundUser.getLikedPosts().contains(foundPost)) {
-            foundUser.getLikedPosts().remove(foundPost);
-            userRepository.save(foundUser);
-            return ResponseEntity.ok("User dislikes the post with ID: " + id);
-        } else {
-            foundUser.getLikedPosts().add(foundPost);
-            userRepository.save(foundUser);
-            return ResponseEntity.ok("User likes the post with ID: " + id);
+        try {
+            Optional<PostDTO> optionalPostDTO = postService.getById(id);
+            Optional<UserDTO> optionalUserDTO = userService.getById(userIdDTO.getId());
+            if (optionalPostDTO.isEmpty()) {
+                return new ResponseEntity<>("Post with id " + id + " was not found", HttpStatus.NOT_FOUND);
+            }
+            if (optionalUserDTO.isEmpty()) {
+                return new ResponseEntity<>("User with id " + userIdDTO.getId() + " was not found", HttpStatus.NOT_FOUND);
+            }
+            return ResponseEntity.ok(postService.toggleLike(optionalPostDTO.get(), optionalUserDTO.get()));
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -156,24 +135,18 @@ public class PostController {
     public ResponseEntity<String> toggleFollowOfAPost(
             @PathVariable Long id,
             @RequestBody UserIdDTO userIdDTO) {
-        Post post = getPostRecord(id);
-        if (post == null) {
-            return new ResponseEntity<>("Post with ID: " + id + "does not exist", HttpStatus.NOT_FOUND);
-        }
-
-        User user = getUserRecord(userIdDTO.getId());
-        if (user == null) {
-            return new ResponseEntity<>("User with ID: " + userIdDTO.getId() + "does not exist", HttpStatus.NOT_FOUND);
-        }
-
-        if (user.getFollowedPosts().contains(post)) {
-            user.getFollowedPosts().remove(post);
-            userRepository.save(user);
-            return ResponseEntity.ok("User unfollowed the post with ID: " + id);
-        } else {
-            user.getFollowedPosts().add(post);
-            userRepository.save(user);
-            return ResponseEntity.ok("User followed the post with ID: " + id);
+        try {
+            Optional<PostDTO> optionalPostDTO = postService.getById(id);
+            Optional<UserDTO> optionalUserDTO = userService.getById(userIdDTO.getId());
+            if (optionalPostDTO.isEmpty()) {
+                return new ResponseEntity<>("Post with id " + id + " was not found", HttpStatus.NOT_FOUND);
+            }
+            if (optionalUserDTO.isEmpty()) {
+                return new ResponseEntity<>("User with id " + userIdDTO.getId() + " was not found", HttpStatus.NOT_FOUND);
+            }
+            return ResponseEntity.ok(postService.toggleFollow(optionalPostDTO.get(), optionalUserDTO.get()));
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -185,9 +158,15 @@ public class PostController {
      */
     @GetMapping("/followed/{userId}")
     public ResponseEntity<?> getPostsFollowedByUser(@PathVariable Long userId) {
-        List<Object[]> followedPosts = postRepository.findPostsFollowedByUserWithUserName(userId);
-        User userLogged = getUserRecord(userId);
-        return getResponsePosts(followedPosts, userLogged);
+        try {
+            Optional<UserDTO> optionalUserDTO = userService.getById(userId);
+            if (optionalUserDTO.isEmpty()) {
+                return new ResponseEntity<>("User with id " + userId + " was not found", HttpStatus.NOT_FOUND);
+            }
+            return ResponseEntity.ok(postService.getAllFollowedByUser(optionalUserDTO.get()));
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -198,119 +177,27 @@ public class PostController {
      */
     @GetMapping("/not-followed/{userId}")
     public ResponseEntity<?> getPostsNotFollowedByUser(@PathVariable Long userId) {
-        List<Object[]> notFollowedPosts = postRepository.findPostsNotFollowedByUserWithUserName(userId);
-        User userLogged = getUserRecord(userId);
-        return getResponsePosts(notFollowedPosts, userLogged);
-    }
-
-    private ResponseEntity<?> getResponsePosts(List<Object[]> posts, User userLogged) {
-        List<DetailedPostDTO> result = new ArrayList<>();
-        for (Object[] objects : posts) {
-            Post post = (Post) objects[0];
-            String userName = (String) objects[1];
-            Integer numberOfFollowers = (Integer) objects[2];
-            Integer numberOfComments = (Integer) objects[3];
-            Integer numberOfLikes = (Integer) objects[4];
-            result.add(new DetailedPostDTO(
-                            post,
-                            userName,
-                            numberOfFollowers,
-                            numberOfComments,
-                            numberOfLikes,
-                            post.getUsersWhoFollows().contains(userLogged),
-                            post.getUserWhoLikes().contains(userLogged),
-                            Boolean.FALSE,
-                            post.getPostDays()
-                    )
-            );
+        try {
+            Optional<UserDTO> optionalUserDTO = userService.getById(userId);
+            if (optionalUserDTO.isEmpty()) {
+                return new ResponseEntity<>("User with id " + userId + " was not found", HttpStatus.NOT_FOUND);
+            }
+            return ResponseEntity.ok(postService.getAllNotFollowedByUser(optionalUserDTO.get()));
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/user/{userId}")
     private ResponseEntity<?> getUserPosts(@PathVariable Long userId) {
-        User user = getUserRecord(userId);
-        if (user == null) {
-            return new ResponseEntity<>("User with id " + userId + " was not found", HttpStatus.NOT_FOUND);
-        }
-        List<DetailedPostDTO> result = new ArrayList<>();
-        for (Post post : user.getPosts()) {
-            result.add(new DetailedPostDTO(
-                            post,
-                            user.getFullName(),
-                            post.getUsersWhoFollows().size(),
-                            post.getComments().size(),
-                            post.getUserWhoLikes().size(),
-                            post.getUsersWhoFollows().contains(user),
-                            post.getUserWhoLikes().contains(user),
-                            Boolean.TRUE,
-                            post.getPostDays()
-                    )
-            );
-        }
-        return ResponseEntity.ok(result);
-    }
-
-    /**
-     * Adds a new post day
-     *
-     * @param addPostDayDTO - New PostDay data with post id
-     * @return - Created PostDay entity
-     */
-    @PostMapping("day")
-    public ResponseEntity<?> addPostDay(@RequestBody AddPostDayDTO addPostDayDTO) {
         try {
-            Post post = getPostRecord(addPostDayDTO.getPostId());
-            if (post == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post with id " + addPostDayDTO.getPostId() + " was not found.");
+            Optional<UserDTO> optionalUserDTO = userService.getById(userId);
+            if (optionalUserDTO.isEmpty()) {
+                return new ResponseEntity<>("User with id " + userId + " was not found", HttpStatus.NOT_FOUND);
             }
-
-            if (postDayRepository.findPostDayByPostAndDay(post, addPostDayDTO.getPostDay().getDay()) != null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El dia de la experiencia ya existe");
-            }
-
-            PostDay postDay = addPostDayDTO.getPostDay();
-            postDay.setCreatedAt(ZonedDateTime.now());
-            postDay.setUpdatedAt(ZonedDateTime.now());
-
-            postDay.setPost(post);
-            postDayRepository.save(postDay);
-
-            return new ResponseEntity<>(postDay, HttpStatus.CREATED);
+            return ResponseEntity.ok(postService.getUserPosts(optionalUserDTO.get()));
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Updates Post Day values according to post id
-     *
-     * @param id      - Post id
-     * @param postDay - New Post Day data
-     * @return - Updated Post Day
-     */
-    @PutMapping("/{id}/day")
-    public ResponseEntity<?> updatePostDay(@PathVariable("id") Long id, @RequestBody PostDay postDay) {
-        try {
-            Post post = getPostRecord(id);
-            if (post == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post with id " + id + " was not found.");
-            }
-            PostDay foundPostDay = getPostDayRecord(postDay.getId());
-            if (foundPostDay == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post Day with id " + postDay.getId() + " was not found.");
-            }
-            PostDay postDayWithTheNewDay = postDayRepository.findPostDayByPostAndDay(post, postDay.getDay());
-            if (postDayWithTheNewDay != null && !Objects.equals(postDayWithTheNewDay.getId(), foundPostDay.getId())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Post Day with day " + postDay.getDay() + " already exists.");
-            }
-            foundPostDay.setDay(postDay.getDay());
-            foundPostDay.setContent(postDay.getContent());
-            foundPostDay.setImage(postDay.getImage());
-            foundPostDay.setUpdatedAt(ZonedDateTime.now());
-            return ResponseEntity.ok(postDayRepository.save(foundPostDay));
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -364,17 +251,6 @@ public class PostController {
     private Post getPostRecord(long id) {
         Optional<Post> postObj = postRepository.findById(id);
         return postObj.orElse(null);
-    }
-
-    /**
-     * Gets the record of the User based by id
-     *
-     * @param id - User id
-     * @return - User or null
-     */
-    private User getUserRecord(long id) {
-        Optional<User> userObj = userRepository.findById(id);
-        return userObj.orElse(null);
     }
 
     /**
