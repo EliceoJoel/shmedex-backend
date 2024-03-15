@@ -2,8 +2,8 @@ package com.eherbas.shmedex.service.implement;
 
 import com.eherbas.shmedex.exception.RegistrationException;
 import com.eherbas.shmedex.model.AuthResponse;
-import com.eherbas.shmedex.model.LoginRequest;
-import com.eherbas.shmedex.model.RegisterRequest;
+import com.eherbas.shmedex.dto.LoginDTO;
+import com.eherbas.shmedex.dto.RegisterDTO;
 import com.eherbas.shmedex.model.User;
 import com.eherbas.shmedex.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,7 +24,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(LoginDTO request) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
             User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
@@ -37,7 +37,7 @@ public class AuthService {
         }
     }
 
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterDTO request) {
         if(userRepository.existsByEmail(request.getEmail())) {
             throw new RegistrationException("El email ya está en uso");
         }

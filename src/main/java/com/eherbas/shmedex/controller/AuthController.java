@@ -3,8 +3,8 @@ package com.eherbas.shmedex.controller;
 import com.eherbas.shmedex.exception.RegistrationException;
 import com.eherbas.shmedex.model.AuthResponse;
 import com.eherbas.shmedex.service.implement.AuthService;
-import com.eherbas.shmedex.model.LoginRequest;
-import com.eherbas.shmedex.model.RegisterRequest;
+import com.eherbas.shmedex.dto.LoginDTO;
+import com.eherbas.shmedex.dto.RegisterDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -21,7 +21,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping(value = "login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginDTO request) {
         try {
             AuthResponse response = authService.login(request);
             return ResponseEntity.ok(response);
@@ -31,7 +31,7 @@ public class AuthController {
     }
 
     @PostMapping(value = "register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@RequestBody RegisterDTO request) {
         try {
             AuthResponse response =authService.register(request);
             return  ResponseEntity.ok(response);

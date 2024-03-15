@@ -1,5 +1,7 @@
-package com.eherbas.shmedex.model;
+package com.eherbas.shmedex.dto;
 
+import com.eherbas.shmedex.model.Post;
+import com.eherbas.shmedex.model.PostDay;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

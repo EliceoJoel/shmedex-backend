@@ -66,6 +66,7 @@ public class PostDayServiceImpl implements PostDayService {
 
     @Override
     public PostDayDTO getPostDayByPostAndDay(PostDTO postDTO, Integer day) {
-        return postDayMapper.toDto(postDayRepository.findPostDayByPostAndDay(postMapper.toEntity(postDTO), day));
+        PostDay postDay = postDayRepository.findPostDayByPostAndDay(postMapper.toEntity(postDTO), day);
+        return postDay != null ? postDayMapper.toDto(postDay) : null;
     }
 }
