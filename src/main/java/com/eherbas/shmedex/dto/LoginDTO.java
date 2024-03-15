@@ -1,4 +1,4 @@
-package com.eherbas.shmedex.model;
+package com.eherbas.shmedex.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class CommentResponse {
-    Comment comment;
-    String userWhoCommented;
+@NoArgsConstructor
+public class LoginDTO {
+    String email;
+    String password;
 }

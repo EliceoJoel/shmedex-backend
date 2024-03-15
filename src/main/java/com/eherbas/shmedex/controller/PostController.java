@@ -1,21 +1,14 @@
 package com.eherbas.shmedex.controller;
 
 import com.eherbas.shmedex.dto.*;
-import com.eherbas.shmedex.model.*;
-import com.eherbas.shmedex.repository.CommentRepository;
-import com.eherbas.shmedex.repository.PostDayRepository;
-import com.eherbas.shmedex.repository.PostRepository;
-import com.eherbas.shmedex.repository.UserRepository;
 import com.eherbas.shmedex.service.PostService;
 import com.eherbas.shmedex.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.time.ZonedDateTime;
 import java.util.*;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -26,18 +19,6 @@ public class PostController {
 
     private final PostService postService;
     private final UserService userService;
-
-    @Autowired
-    private PostRepository postRepository;
-
-    @Autowired
-    private CommentRepository commentRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PostDayRepository postDayRepository;
 
     /**
      * Creates a post
@@ -97,7 +78,7 @@ public class PostController {
             postService.deletePost(optionalPostDTO.get());
             return ResponseEntity.ok("Post with id " + id + " deleted successfully");
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -120,7 +101,7 @@ public class PostController {
             }
             return ResponseEntity.ok(postService.toggleLike(optionalPostDTO.get(), optionalUserDTO.get()));
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -146,7 +127,7 @@ public class PostController {
             }
             return ResponseEntity.ok(postService.toggleFollow(optionalPostDTO.get(), optionalUserDTO.get()));
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -165,7 +146,7 @@ public class PostController {
             }
             return ResponseEntity.ok(postService.getAllFollowedByUser(optionalUserDTO.get()));
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -184,7 +165,7 @@ public class PostController {
             }
             return ResponseEntity.ok(postService.getAllNotFollowedByUser(optionalUserDTO.get()));
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -197,7 +178,7 @@ public class PostController {
             }
             return ResponseEntity.ok(postService.getUserPosts(optionalUserDTO.get()));
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage() ,HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -211,15 +192,16 @@ public class PostController {
     @PostMapping("/{id}/comment")
     public ResponseEntity<?> addNewCommentToPost(
             @PathVariable Long id,
-            @RequestBody Comment newComment) {
-        Post post = getPostRecord(id);
-        if (post == null) {
-            return new ResponseEntity<>("Post with id: " + id + " was not found.", HttpStatus.NOT_FOUND);
+            @RequestBody CommentDTO newComment) {
+        try {
+            Optional<PostDTO> optionalPostDTO = postService.getById(id);
+            if (optionalPostDTO.isEmpty()) {
+                return new ResponseEntity<>("Post with id " + id + " was not found", HttpStatus.NOT_FOUND);
+            }
+            return ResponseEntity.ok(postService.addComment(optionalPostDTO.get(), newComment));
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        newComment.setPost(post);
-        newComment.setCreatedAt(ZonedDateTime.now());
-        Comment savedComment = commentRepository.save(newComment);
-        return new ResponseEntity<>(savedComment, HttpStatus.OK);
     }
 
     /**
@@ -230,37 +212,14 @@ public class PostController {
      */
     @GetMapping("/{id}/comments")
     public ResponseEntity<?> getPostComments(@PathVariable Long id) {
-        Post post = getPostRecord(id);
-        if (post == null) {
-            return new ResponseEntity<>("Post with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+        try {
+            Optional<PostDTO> optionalPostDTO = postService.getById(id);
+            if (optionalPostDTO.isEmpty()) {
+                return new ResponseEntity<>("Post with id " + id + " was not found", HttpStatus.NOT_FOUND);
+            }
+            return ResponseEntity.ok(postService.getPostComments(optionalPostDTO.get()));
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        List<Comment> comments = commentRepository.findByPost(post);
-        List<CommentResponse> commentResponse = new ArrayList<>();
-        for (Comment comment : comments) {
-            commentResponse.add(new CommentResponse(comment, comment.getUser().getFullName()));
-        }
-        return ResponseEntity.ok(commentResponse);
-    }
-
-    /**
-     * Gets the record of the Post based by id
-     *
-     * @param id - Post id
-     * @return - Post or null
-     */
-    private Post getPostRecord(long id) {
-        Optional<Post> postObj = postRepository.findById(id);
-        return postObj.orElse(null);
-    }
-
-    /**
-     * Gets the record of the PostDay based by id
-     *
-     * @param id - PostDay id
-     * @return - PostDay or null
-     */
-    private PostDay getPostDayRecord(long id) {
-        Optional<PostDay> postDayObj = postDayRepository.findById(id);
-        return postDayObj.orElse(null);
     }
 }

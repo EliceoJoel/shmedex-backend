@@ -1,14 +1,10 @@
 package com.eherbas.shmedex.service.implement;
 
-import com.eherbas.shmedex.dto.NewPostDTO;
-import com.eherbas.shmedex.dto.PostDTO;
-import com.eherbas.shmedex.dto.UserDTO;
+import com.eherbas.shmedex.dto.*;
+import com.eherbas.shmedex.mapper.CommentMapper;
 import com.eherbas.shmedex.mapper.PostMapper;
 import com.eherbas.shmedex.mapper.UserMapper;
-import com.eherbas.shmedex.model.DetailedPostDTO;
-import com.eherbas.shmedex.model.Post;
-import com.eherbas.shmedex.model.PostDay;
-import com.eherbas.shmedex.model.User;
+import com.eherbas.shmedex.model.*;
 import com.eherbas.shmedex.repository.CommentRepository;
 import com.eherbas.shmedex.repository.PostDayRepository;
 import com.eherbas.shmedex.repository.PostRepository;
@@ -33,6 +29,7 @@ public class PostServiceImpl implements PostService {
     private final UserRepository userRepository;
     private final PostMapper postMapper;
     private final UserMapper userMapper;
+    private final CommentMapper commentMapper;
 
     @Override
     public PostDTO save(NewPostDTO newPostDTO) {
@@ -156,6 +153,26 @@ public class PostServiceImpl implements PostService {
             );
         }
         return userPosts;
+    }
+
+    @Override
+    public CommentDTO addComment(PostDTO postDTO, CommentDTO commentDTO) {
+        Comment comment = commentMapper.toEntity(commentDTO);
+        Post post = postMapper.toEntity(postDTO);
+        comment.setPost(post);
+        comment.setCreatedAt(ZonedDateTime.now());
+        return commentMapper.toDto(commentRepository.save(comment));
+    }
+
+    @Override
+    public List<CommentWithUserDTO> getPostComments(PostDTO postDTO) {
+        Post post = postMapper.toEntity(postDTO);
+        List<Comment> comments = commentRepository.findByPost(post);
+        List<CommentWithUserDTO> commentWithUserDTO = new ArrayList<>();
+        for (Comment comment : comments) {
+            commentWithUserDTO.add(new CommentWithUserDTO(comment, comment.getUser().getFullName()));
+        }
+        return commentWithUserDTO;
     }
 
     private PostDay getPostDayByDay(List<PostDay> postDayList, int dayToFind) {

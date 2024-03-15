@@ -1,4 +1,4 @@
-package com.eherbas.shmedex.model;
+package com.eherbas.shmedex.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,9 +7,11 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class LoginRequest {
+@AllArgsConstructor
+public class RegisterDTO {
     String email;
     String password;
+    String name;
+    String lastname;
 }
