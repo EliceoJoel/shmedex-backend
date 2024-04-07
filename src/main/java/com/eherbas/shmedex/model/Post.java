@@ -34,10 +34,10 @@ public class Post {
     private List<PostDay> postDays;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "followedPosts")
+    @ManyToMany(mappedBy = "followedPosts", fetch = FetchType.LAZY)
     private List<User> usersWhoFollows;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "likedPosts")
+    @ManyToMany(mappedBy = "likedPosts", fetch = FetchType.LAZY)
     private List<User> userWhoLikes;
 }

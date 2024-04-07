@@ -10,6 +10,7 @@ import com.eherbas.shmedex.repository.PostDayRepository;
 import com.eherbas.shmedex.repository.PostRepository;
 import com.eherbas.shmedex.repository.UserRepository;
 import com.eherbas.shmedex.service.PostService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
+@Transactional
 @Service
 public class PostServiceImpl implements PostService {
 
@@ -90,32 +92,42 @@ public class PostServiceImpl implements PostService {
         postRepository.delete(post);
     }
 
+    @Transactional
     @Override
     public String toggleLike(PostDTO postDTO, UserDTO userDTO) {
         Post post = postMapper.toEntity(postDTO);
         User user = userMapper.toEntity(userDTO);
         if (user.getLikedPosts().contains(post)) {
             user.getLikedPosts().remove(post);
+            post.getUserWhoLikes().remove(user);
             userRepository.save(user);
+            postRepository.save(post);
             return "User dislikes the post with id " + post.getId();
         } else {
             user.getLikedPosts().add(post);
+            post.getUserWhoLikes().add(user);
             userRepository.save(user);
+            postRepository.save(post);
             return "User likes the post with ID: " + post.getId();
         }
     }
 
+    @Transactional
     @Override
     public String toggleFollow(PostDTO postDTO, UserDTO userDTO) {
         Post post = postMapper.toEntity(postDTO);
         User user = userMapper.toEntity(userDTO);
         if (user.getFollowedPosts().contains(post)) {
             user.getFollowedPosts().remove(post);
+            post.getUsersWhoFollows().remove(user);
             userRepository.save(user);
+            postRepository.save(post);
             return "User unfollowed the post with id " + post.getId();
         } else {
             user.getFollowedPosts().add(post);
+            post.getUsersWhoFollows().add(user);
             userRepository.save(user);
+            postRepository.save(post);
             return "User followed the post with id " + post.getId();
         }
     }

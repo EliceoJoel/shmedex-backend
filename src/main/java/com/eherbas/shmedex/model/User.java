@@ -39,7 +39,7 @@ public class User implements UserDetails {
     private List<Post> posts;
 
     @JsonIgnore
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "follows",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
@@ -48,7 +48,7 @@ public class User implements UserDetails {
     private List<Post> followedPosts;
 
     @JsonIgnore
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "likes",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
