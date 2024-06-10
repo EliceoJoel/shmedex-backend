@@ -77,7 +77,11 @@ public class PostServiceImpl implements PostService {
             commentRepository.deleteAll(post.getComments());
         }
         if (!post.getPostDays().isEmpty()) {
-            postDayRepository.deleteAll(post.getPostDays());
+            for (PostDay postDay : post.getPostDays()) {
+                postDay.setPost(null);
+                postDayRepository.delete(postDay);
+            }
+            post.getPostDays().clear();
         }
         if (!post.getUsersWhoFollows().isEmpty()) {
             for (User user : post.getUsersWhoFollows()) {
